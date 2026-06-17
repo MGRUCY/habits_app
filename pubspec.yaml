@@ -20,6 +20,12 @@ dependencies:
   path: ^1.9.1
   freezed_annotation: ^3.1.0
   flex_color_scheme: ^8.4.0
+  flutter_toggle_button: ^0.0.4
+  toggle_switch: ^2.3.0
+  m3e_buttons: ^0.0.3
+  day_picker: ^2.3.0
+  count_stepper: ^0.0.5
+  flex_color_picker: ^3.8.0
   # flutter_native_splash: ^2.4.7
 
 dev_dependencies:

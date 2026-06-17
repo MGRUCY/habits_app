@@ -2,17 +2,11 @@ import 'dart:io';
 
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
+import 'package:habits_app/db/tables.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 
 part 'db.g.dart';
-
-class Habits extends Table {
-  TextColumn get id => text().named("id")();
-
-  @override
-  Set<Column> get primaryKey => {id};
-}
 
 LazyDatabase _openConnection() {
   return LazyDatabase(() async {
@@ -34,5 +28,7 @@ class AppDb extends _$AppDb {
   @override
   int get schemaVersion => 1;
 
-  
+  Future addHabit(HabitsCompanion entry) {
+    return into(habits).insert(entry);
+  }
 }

@@ -1,7 +1,13 @@
 class User {
-  final String email;
-  final String username;
-  final String token;
+  final String name;
+  final String note;
+  final String color;
+  final String times;
 
-  User({required this.email, required this.username, required this.token});
+  User({
+    required this.name,
+    required this.note,
+    required this.color,
+    required this.times,
+  });
 }
