@@ -64,17 +64,15 @@ class $HabitsTable extends Habits with TableInfo<$HabitsTable, Habit> {
     type: DriftSqlType.int,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _daysListMeta = const VerificationMeta(
-    'daysList',
-  );
   @override
-  late final GeneratedColumn<String> daysList = GeneratedColumn<String>(
-    'days_list',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
+  late final GeneratedColumnWithTypeConverter<List<String>, String> daysList =
+      GeneratedColumn<String>(
+        'days_list',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      ).withConverter<List<String>>($HabitsTable.$converterdaysList);
   static const VerificationMeta _colorIntMeta = const VerificationMeta(
     'colorInt',
   );
@@ -159,14 +157,6 @@ class $HabitsTable extends Habits with TableInfo<$HabitsTable, Habit> {
     } else if (isInserting) {
       context.missing(_timesPerWeekIntMeta);
     }
-    if (data.containsKey('days_list')) {
-      context.handle(
-        _daysListMeta,
-        daysList.isAcceptableOrUnknown(data['days_list']!, _daysListMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_daysListMeta);
-    }
     if (data.containsKey('color_int')) {
       context.handle(
         _colorIntMeta,
@@ -210,10 +200,12 @@ class $HabitsTable extends Habits with TableInfo<$HabitsTable, Habit> {
         DriftSqlType.int,
         data['${effectivePrefix}times_per_week_int'],
       )!,
-      daysList: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}days_list'],
-      )!,
+      daysList: $HabitsTable.$converterdaysList.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}days_list'],
+        )!,
+      ),
       colorInt: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}color_int'],
@@ -229,6 +221,9 @@ class $HabitsTable extends Habits with TableInfo<$HabitsTable, Habit> {
   $HabitsTable createAlias(String alias) {
     return $HabitsTable(attachedDatabase, alias);
   }
+
+  static TypeConverter<List<String>, String> $converterdaysList =
+      const DaysListConverter();
 }
 
 class Habit extends DataClass implements Insertable<Habit> {
@@ -237,7 +232,7 @@ class Habit extends DataClass implements Insertable<Habit> {
   final String note;
   final bool timesFlag;
   final int timesPerWeekInt;
-  final String daysList;
+  final List<String> daysList;
   final int colorInt;
   final DateTime createdAt;
   const Habit({
@@ -258,7 +253,11 @@ class Habit extends DataClass implements Insertable<Habit> {
     map['note'] = Variable<String>(note);
     map['times_flag'] = Variable<bool>(timesFlag);
     map['times_per_week_int'] = Variable<int>(timesPerWeekInt);
-    map['days_list'] = Variable<String>(daysList);
+    {
+      map['days_list'] = Variable<String>(
+        $HabitsTable.$converterdaysList.toSql(daysList),
+      );
+    }
     map['color_int'] = Variable<int>(colorInt);
     map['created_at'] = Variable<DateTime>(createdAt);
     return map;
@@ -288,7 +287,7 @@ class Habit extends DataClass implements Insertable<Habit> {
       note: serializer.fromJson<String>(json['note']),
       timesFlag: serializer.fromJson<bool>(json['timesFlag']),
       timesPerWeekInt: serializer.fromJson<int>(json['timesPerWeekInt']),
-      daysList: serializer.fromJson<String>(json['daysList']),
+      daysList: serializer.fromJson<List<String>>(json['daysList']),
       colorInt: serializer.fromJson<int>(json['colorInt']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
@@ -302,7 +301,7 @@ class Habit extends DataClass implements Insertable<Habit> {
       'note': serializer.toJson<String>(note),
       'timesFlag': serializer.toJson<bool>(timesFlag),
       'timesPerWeekInt': serializer.toJson<int>(timesPerWeekInt),
-      'daysList': serializer.toJson<String>(daysList),
+      'daysList': serializer.toJson<List<String>>(daysList),
       'colorInt': serializer.toJson<int>(colorInt),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
@@ -314,7 +313,7 @@ class Habit extends DataClass implements Insertable<Habit> {
     String? note,
     bool? timesFlag,
     int? timesPerWeekInt,
-    String? daysList,
+    List<String>? daysList,
     int? colorInt,
     DateTime? createdAt,
   }) => Habit(
@@ -388,7 +387,7 @@ class HabitsCompanion extends UpdateCompanion<Habit> {
   final Value<String> note;
   final Value<bool> timesFlag;
   final Value<int> timesPerWeekInt;
-  final Value<String> daysList;
+  final Value<List<String>> daysList;
   final Value<int> colorInt;
   final Value<DateTime> createdAt;
   const HabitsCompanion({
@@ -407,7 +406,7 @@ class HabitsCompanion extends UpdateCompanion<Habit> {
     required String note,
     required bool timesFlag,
     required int timesPerWeekInt,
-    required String daysList,
+    required List<String> daysList,
     required int colorInt,
     this.createdAt = const Value.absent(),
   }) : name = Value(name),
@@ -444,7 +443,7 @@ class HabitsCompanion extends UpdateCompanion<Habit> {
     Value<String>? note,
     Value<bool>? timesFlag,
     Value<int>? timesPerWeekInt,
-    Value<String>? daysList,
+    Value<List<String>>? daysList,
     Value<int>? colorInt,
     Value<DateTime>? createdAt,
   }) {
@@ -479,7 +478,9 @@ class HabitsCompanion extends UpdateCompanion<Habit> {
       map['times_per_week_int'] = Variable<int>(timesPerWeekInt.value);
     }
     if (daysList.present) {
-      map['days_list'] = Variable<String>(daysList.value);
+      map['days_list'] = Variable<String>(
+        $HabitsTable.$converterdaysList.toSql(daysList.value),
+      );
     }
     if (colorInt.present) {
       map['color_int'] = Variable<int>(colorInt.value);
@@ -524,7 +525,7 @@ typedef $$HabitsTableCreateCompanionBuilder =
       required String note,
       required bool timesFlag,
       required int timesPerWeekInt,
-      required String daysList,
+      required List<String> daysList,
       required int colorInt,
       Value<DateTime> createdAt,
     });
@@ -535,7 +536,7 @@ typedef $$HabitsTableUpdateCompanionBuilder =
       Value<String> note,
       Value<bool> timesFlag,
       Value<int> timesPerWeekInt,
-      Value<String> daysList,
+      Value<List<String>> daysList,
       Value<int> colorInt,
       Value<DateTime> createdAt,
     });
@@ -573,9 +574,10 @@ class $$HabitsTableFilterComposer extends Composer<_$AppDb, $HabitsTable> {
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<String> get daysList => $composableBuilder(
+  ColumnWithTypeConverterFilters<List<String>, List<String>, String>
+  get daysList => $composableBuilder(
     column: $table.daysList,
-    builder: (column) => ColumnFilters(column),
+    builder: (column) => ColumnWithTypeConverterFilters(column),
   );
 
   ColumnFilters<int> get colorInt => $composableBuilder(
@@ -663,7 +665,7 @@ class $$HabitsTableAnnotationComposer extends Composer<_$AppDb, $HabitsTable> {
     builder: (column) => column,
   );
 
-  GeneratedColumn<String> get daysList =>
+  GeneratedColumnWithTypeConverter<List<String>, String> get daysList =>
       $composableBuilder(column: $table.daysList, builder: (column) => column);
 
   GeneratedColumn<int> get colorInt =>
@@ -706,7 +708,7 @@ class $$HabitsTableTableManager
                 Value<String> note = const Value.absent(),
                 Value<bool> timesFlag = const Value.absent(),
                 Value<int> timesPerWeekInt = const Value.absent(),
-                Value<String> daysList = const Value.absent(),
+                Value<List<String>> daysList = const Value.absent(),
                 Value<int> colorInt = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
               }) => HabitsCompanion(
@@ -726,7 +728,7 @@ class $$HabitsTableTableManager
                 required String note,
                 required bool timesFlag,
                 required int timesPerWeekInt,
-                required String daysList,
+                required List<String> daysList,
                 required int colorInt,
                 Value<DateTime> createdAt = const Value.absent(),
               }) => HabitsCompanion.insert(

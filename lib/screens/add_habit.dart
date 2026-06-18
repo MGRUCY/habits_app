@@ -1,19 +1,21 @@
 import 'package:drift/drift.dart' as drift;
 import 'package:flutter/material.dart';
 import 'package:habits_app/db/db.dart';
+import 'package:habits_app/provider/db_provider.dart';
+import 'package:habits_app/provider/habits_provider.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:toggle_switch/toggle_switch.dart';
 import 'package:day_picker/day_picker.dart';
 import 'package:count_stepper/count_stepper.dart';
 
-class AddHabit extends StatefulWidget {
+class AddHabit extends ConsumerStatefulWidget {
   const AddHabit({super.key});
 
   @override
-  State<AddHabit> createState() => _AddHabitState();
+  ConsumerState<AddHabit> createState() => _AddHabitState();
 }
 
-class _AddHabitState extends State<AddHabit> {
-  AppDb db = AppDb();
+class _AddHabitState extends ConsumerState<AddHabit> {
   TextEditingController nameController = TextEditingController();
   TextEditingController noteController = TextEditingController();
   StepperController stepperController = StepperController();
@@ -95,6 +97,8 @@ class _AddHabitState extends State<AddHabit> {
 
   @override
   Widget build(BuildContext context) {
+    final habit = ref.watch(habitsProvider.notifier);
+
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
@@ -109,12 +113,11 @@ class _AddHabitState extends State<AddHabit> {
                 note: drift.Value(noteController.text),
                 timesFlag: drift.Value(timesFlag),
                 timesPerWeekInt: drift.Value(stepperController.currentValue),
-                // daysList: drift.Value(daysCont), //use typeconverter
+                daysList: drift.Value(daysCont), //use typeconverter
                 colorInt: drift.Value(colorCont),
                 createdAt: drift.Value(DateTime.now()),
               );
-
-              await db.addHabit(habitsCompanion);
+              habit.addHabit(habitsCompanion);
             },
             icon: Icon(Icons.add),
           ),
@@ -229,10 +232,10 @@ class _AddHabitState extends State<AddHabit> {
               minWidth: 200,
               cornerRadius: 40,
               minHeight: 44,
-              borderWidth: 10,
+              borderWidth: 0,
               borderColor: [Color.fromARGB(26, 243, 243, 243)],
               activeBgColor: [Color.fromARGB(26, 243, 243, 243)],
-              inactiveBgColor: const Color.fromARGB(26, 243, 243, 243),
+              inactiveBgColor: const Color.fromARGB(0, 243, 243, 243),
               inactiveFgColor: const Color.fromARGB(255, 255, 255, 255),
               initialLabelIndex: initialColorIndex,
               totalSwitches: 7,

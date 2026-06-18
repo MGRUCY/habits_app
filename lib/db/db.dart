@@ -27,8 +27,4 @@ class AppDb extends _$AppDb {
 
   @override
   int get schemaVersion => 1;
-
-  Future addHabit(HabitsCompanion entry) {
-    return into(habits).insert(entry);
-  }
 }
