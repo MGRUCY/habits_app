@@ -1,14 +1,22 @@
 import 'package:flutter/material.dart';
-import 'package:habits_app/provider/habits_provider.dart';
+import 'package:habits_app/settings/habit_colors.dart';
+import 'package:habits_app/provider/habits/habits_provider.dart';
+import 'package:habits_app/provider/logs/habits_logs_provider.dart';
 import 'package:habits_app/screens/add_habit.dart';
-import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+String _todayString() {
+  final now = DateTime.now();
+  return "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
+}
 
 class HabitsList extends ConsumerWidget {
   const HabitsList({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final habits = ref.watch(habitsProvider);
+    final habitsAsync = ref.watch(habitsProvider);
+    
     return Scaffold(
       floatingActionButton: TextButton(
         onPressed: () {
@@ -26,22 +34,43 @@ class HabitsList extends ConsumerWidget {
       ),
       appBar: AppBar(title: Text("Habits")),
       body: SingleChildScrollView(
-        child: Column(children: [Rythm(), CustomHabitTile()]),
+        child: Column(
+          children: [
+            Rythm(),
+            habitsAsync.when(
+              data: (habits) {
+                return Column(
+                  children: habits.map((habit) {
+                    return CustomHabitTile(habit: habit);
+                  }).toList(),
+                );
+              },
+              loading: () => Padding(
+                padding: EdgeInsets.all(40),
+                child: CircularProgressIndicator(),
+              ),
+              error: (err, stack) => Text("Error loading habits: $err"),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
-class Rythm extends StatefulWidget {
+
+class Rythm extends ConsumerStatefulWidget {
   const Rythm({super.key});
 
   @override
-  State<Rythm> createState() => _RythmState();
+  ConsumerState<Rythm> createState() => _RythmState();
 }
 
-class _RythmState extends State<Rythm> {
+class _RythmState extends ConsumerState<Rythm> {
   @override
   Widget build(BuildContext context) {
+    final habitsAsync = ref.watch(habitsProvider);
+
     return Container(
       margin: EdgeInsets.all(10),
       padding: EdgeInsets.all(20),
@@ -55,66 +84,208 @@ class _RythmState extends State<Rythm> {
           Row(
             children: [
               Column(
-                crossAxisAlignment: .start,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text("Your Rhythm"),
                   Text("LAST 30 DAYS", style: TextStyle(fontSize: 8)),
                 ],
               ),
               Spacer(),
-              Text("total days"),
             ],
           ),
           SizedBox(height: 18),
-          Text("--...-.-.-.-.--...-.-.-.-.--...-.-.-.-.-"),
-          Text("--...-.-.-.-.--...-.-.-.-.--...-.-.-.-.-"),
-          Text("--...-.-.-.-.--...-.-.-.-.--...-.-.-.-.-"),
+          habitsAsync.when(
+            data: (habits) {
+              return Column(
+                children: habits.map((habit) {
+                  return _HabitDotsRow(habit: habit);
+                }).toList(),
+              );
+            },
+            loading: () => CircularProgressIndicator(),
+            error: (err, stack) => Text("Error: $err"),
+          ),
         ],
       ),
     );
-    ;
   }
 }
 
-class CustomHabitTile extends StatefulWidget {
-  const CustomHabitTile({super.key});
+class _HabitDotsRow extends ConsumerWidget {
+  final Map<String, dynamic> habit;
+  const _HabitDotsRow({required this.habit});
 
   @override
-  State<CustomHabitTile> createState() => _CustomHabitTileState();
+  Widget build(BuildContext context, WidgetRef ref) {
+    Color color = habitColors[habit['colorInt'] as int];
+    int habitId = habit['id'] as int;
+    final logsAsync = ref.watch(habitLogsProvider(habitId));
+
+    List<String?> statuses = logsAsync.maybeWhen(
+      data: (logs) {
+        return ref.read(habitLogsProvider(habitId).notifier).last30DaysStatus(logs);
+      },
+      orElse: () => List.filled(30, null),
+    );
+
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: statuses.map((status) {
+          Color dotColor;
+          if (status == 'done') {
+            dotColor = color;
+          } else if (status == 'grace') {
+            dotColor = color.withAlpha(110);
+          } else {
+            dotColor = color.withAlpha(30);
+          }
+
+          return Container(
+            width: 6,
+            height: 6,
+            decoration: BoxDecoration(shape: BoxShape.circle, color: dotColor),
+          );
+        }).toList(),
+      ),
+    );
+  }
 }
 
-class _CustomHabitTileState extends State<CustomHabitTile> {
+class CustomHabitTile extends ConsumerStatefulWidget {
+  final Map<String, dynamic> habit;
+  const CustomHabitTile({super.key, required this.habit});
+
+  @override
+  ConsumerState<CustomHabitTile> createState() => _CustomHabitTileState();
+}
+
+class _CustomHabitTileState extends ConsumerState<CustomHabitTile> {
   @override
   Widget build(BuildContext context) {
+    Color color = habitColors[widget.habit['colorInt'] as int];
+    int habitId = widget.habit['id'] as int;
+    final logsAsync = ref.watch(habitLogsProvider(habitId));
+    String today = _todayString();
+
+    bool isLoading = logsAsync.isLoading;
+
+    int streak = logsAsync.maybeWhen(
+      data: (logs) {
+        return ref.read(habitLogsProvider(habitId).notifier).calculateStreak(logs);
+      },
+      orElse: () => 0,
+    );
+
+    String? todayStatus = logsAsync.maybeWhen(
+      data: (logs) {
+        return ref.read(habitLogsProvider(habitId).notifier).statusForDate(logs, today);
+      },
+      orElse: () => null,
+    );
+
+    bool isDoneToday = false;
+    if (todayStatus == 'done') {
+      isDoneToday = true;
+    }
+
     return Container(
       margin: EdgeInsets.all(10),
       padding: EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color.fromARGB(51, 96, 125, 139),
+        color: color.withAlpha(40),
         borderRadius: BorderRadius.circular(30),
-        border: Border.all(color: Color.fromARGB(89, 96, 125, 139), width: 0.7),
+        border: Border.all(color: color.withAlpha(140), width: 0.7),
       ),
       child: Column(
         children: [
           Row(
             children: [
-              Icon(Icons.ac_unit_rounded),
-              SizedBox(width: 8),
-              Text("habit title"),
+              InkWell(
+                onTap: () {
+                  if (isLoading) return;
+                  final notifier = ref.read(habitLogsProvider(habitId).notifier);
+                  if (isDoneToday) {
+                    notifier.unmark(today);
+                  } else {
+                    notifier.markDone(today);
+                  }
+                },
+                child: Container(
+                  width: 36,
+                  height: 36,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: isDoneToday ? color : Colors.transparent,
+                    border: Border.all(color: color, width: 2),
+                  ),
+                  child: Icon(
+                    Icons.check,
+                    color: isDoneToday ? Colors.white : color.withAlpha(0),
+                    size: 20,
+                  ),
+                ),
+              ),
+              SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  widget.habit['name'] ?? '',
+                  style: TextStyle(
+                    color: color,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
               Spacer(),
-              Text("streak"),
+              Text(
+                "🔥 $streak",
+                style: TextStyle(
+                  color: color.withAlpha(190),
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
+                ),
+              ),
             ],
           ),
           SizedBox(height: 18),
           Row(
             children: [
-              Text("_________/\\____"),
+              Text(
+                "_________/\\____",
+                style: TextStyle(color: color, fontSize: 12),
+              ),
               Spacer(),
-              Text("M T W T F S S"),
+              _buildDayLabels(color),
             ],
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildDayLabels(Color color) {
+    List<String> labels = ["M", "T", "W", "T", "F", "S", "S"];
+    bool timesFlag = widget.habit['timesFlag'] as bool? ?? false;
+    List<String> daysList = (widget.habit['daysList'] as List?)?.cast<String>() ?? [];
+
+    return Row(
+      children: [
+        for (int i = 0; i < 7; i++)
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 2),
+            child: Text(
+              labels[i],
+              style: TextStyle(
+                color: timesFlag || daysList.contains((i + 1).toString()) ? color : color.withAlpha(60),
+                fontWeight: timesFlag || daysList.contains((i + 1).toString()) ? FontWeight.bold : FontWeight.normal,
+              ),
+            ),
+          )
+      ],
     );
   }
 }

@@ -17,7 +17,7 @@ LazyDatabase _openConnection() {
   });
 }
 
-@DriftDatabase(tables: [Habits])
+@DriftDatabase(tables: [Habits, HabitLogs])
 class AppDb extends _$AppDb {
   static AppDb? _instance;
   factory AppDb() {

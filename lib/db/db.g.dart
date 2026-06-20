@@ -507,15 +507,315 @@ class HabitsCompanion extends UpdateCompanion<Habit> {
   }
 }
 
+class $HabitLogsTable extends HabitLogs
+    with TableInfo<$HabitLogsTable, HabitLog> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $HabitLogsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _habitIdMeta = const VerificationMeta(
+    'habitId',
+  );
+  @override
+  late final GeneratedColumn<int> habitId = GeneratedColumn<int>(
+    'habit_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES habits (id)',
+    ),
+  );
+  static const VerificationMeta _dateMeta = const VerificationMeta('date');
+  @override
+  late final GeneratedColumn<String> date = GeneratedColumn<String>(
+    'date',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, habitId, date, status];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'habit_logs';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<HabitLog> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('habit_id')) {
+      context.handle(
+        _habitIdMeta,
+        habitId.isAcceptableOrUnknown(data['habit_id']!, _habitIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_habitIdMeta);
+    }
+    if (data.containsKey('date')) {
+      context.handle(
+        _dateMeta,
+        date.isAcceptableOrUnknown(data['date']!, _dateMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_dateMeta);
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_statusMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {habitId, date},
+  ];
+  @override
+  HabitLog map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return HabitLog(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      habitId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}habit_id'],
+      )!,
+      date: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}date'],
+      )!,
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+    );
+  }
+
+  @override
+  $HabitLogsTable createAlias(String alias) {
+    return $HabitLogsTable(attachedDatabase, alias);
+  }
+}
+
+class HabitLog extends DataClass implements Insertable<HabitLog> {
+  final int id;
+  final int habitId;
+  final String date;
+  final String status;
+  const HabitLog({
+    required this.id,
+    required this.habitId,
+    required this.date,
+    required this.status,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['habit_id'] = Variable<int>(habitId);
+    map['date'] = Variable<String>(date);
+    map['status'] = Variable<String>(status);
+    return map;
+  }
+
+  HabitLogsCompanion toCompanion(bool nullToAbsent) {
+    return HabitLogsCompanion(
+      id: Value(id),
+      habitId: Value(habitId),
+      date: Value(date),
+      status: Value(status),
+    );
+  }
+
+  factory HabitLog.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return HabitLog(
+      id: serializer.fromJson<int>(json['id']),
+      habitId: serializer.fromJson<int>(json['habitId']),
+      date: serializer.fromJson<String>(json['date']),
+      status: serializer.fromJson<String>(json['status']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'habitId': serializer.toJson<int>(habitId),
+      'date': serializer.toJson<String>(date),
+      'status': serializer.toJson<String>(status),
+    };
+  }
+
+  HabitLog copyWith({int? id, int? habitId, String? date, String? status}) =>
+      HabitLog(
+        id: id ?? this.id,
+        habitId: habitId ?? this.habitId,
+        date: date ?? this.date,
+        status: status ?? this.status,
+      );
+  HabitLog copyWithCompanion(HabitLogsCompanion data) {
+    return HabitLog(
+      id: data.id.present ? data.id.value : this.id,
+      habitId: data.habitId.present ? data.habitId.value : this.habitId,
+      date: data.date.present ? data.date.value : this.date,
+      status: data.status.present ? data.status.value : this.status,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('HabitLog(')
+          ..write('id: $id, ')
+          ..write('habitId: $habitId, ')
+          ..write('date: $date, ')
+          ..write('status: $status')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, habitId, date, status);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is HabitLog &&
+          other.id == this.id &&
+          other.habitId == this.habitId &&
+          other.date == this.date &&
+          other.status == this.status);
+}
+
+class HabitLogsCompanion extends UpdateCompanion<HabitLog> {
+  final Value<int> id;
+  final Value<int> habitId;
+  final Value<String> date;
+  final Value<String> status;
+  const HabitLogsCompanion({
+    this.id = const Value.absent(),
+    this.habitId = const Value.absent(),
+    this.date = const Value.absent(),
+    this.status = const Value.absent(),
+  });
+  HabitLogsCompanion.insert({
+    this.id = const Value.absent(),
+    required int habitId,
+    required String date,
+    required String status,
+  }) : habitId = Value(habitId),
+       date = Value(date),
+       status = Value(status);
+  static Insertable<HabitLog> custom({
+    Expression<int>? id,
+    Expression<int>? habitId,
+    Expression<String>? date,
+    Expression<String>? status,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (habitId != null) 'habit_id': habitId,
+      if (date != null) 'date': date,
+      if (status != null) 'status': status,
+    });
+  }
+
+  HabitLogsCompanion copyWith({
+    Value<int>? id,
+    Value<int>? habitId,
+    Value<String>? date,
+    Value<String>? status,
+  }) {
+    return HabitLogsCompanion(
+      id: id ?? this.id,
+      habitId: habitId ?? this.habitId,
+      date: date ?? this.date,
+      status: status ?? this.status,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (habitId.present) {
+      map['habit_id'] = Variable<int>(habitId.value);
+    }
+    if (date.present) {
+      map['date'] = Variable<String>(date.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('HabitLogsCompanion(')
+          ..write('id: $id, ')
+          ..write('habitId: $habitId, ')
+          ..write('date: $date, ')
+          ..write('status: $status')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDb extends GeneratedDatabase {
   _$AppDb(QueryExecutor e) : super(e);
   $AppDbManager get managers => $AppDbManager(this);
   late final $HabitsTable habits = $HabitsTable(this);
+  late final $HabitLogsTable habitLogs = $HabitLogsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
-  List<DatabaseSchemaEntity> get allSchemaEntities => [habits];
+  List<DatabaseSchemaEntity> get allSchemaEntities => [habits, habitLogs];
 }
 
 typedef $$HabitsTableCreateCompanionBuilder =
@@ -540,6 +840,29 @@ typedef $$HabitsTableUpdateCompanionBuilder =
       Value<int> colorInt,
       Value<DateTime> createdAt,
     });
+
+final class $$HabitsTableReferences
+    extends BaseReferences<_$AppDb, $HabitsTable, Habit> {
+  $$HabitsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static MultiTypedResultKey<$HabitLogsTable, List<HabitLog>>
+  _habitLogsRefsTable(_$AppDb db) => MultiTypedResultKey.fromTable(
+    db.habitLogs,
+    aliasName: $_aliasNameGenerator(db.habits.id, db.habitLogs.habitId),
+  );
+
+  $$HabitLogsTableProcessedTableManager get habitLogsRefs {
+    final manager = $$HabitLogsTableTableManager(
+      $_db,
+      $_db.habitLogs,
+    ).filter((f) => f.habitId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_habitLogsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
 
 class $$HabitsTableFilterComposer extends Composer<_$AppDb, $HabitsTable> {
   $$HabitsTableFilterComposer({
@@ -589,6 +912,31 @@ class $$HabitsTableFilterComposer extends Composer<_$AppDb, $HabitsTable> {
     column: $table.createdAt,
     builder: (column) => ColumnFilters(column),
   );
+
+  Expression<bool> habitLogsRefs(
+    Expression<bool> Function($$HabitLogsTableFilterComposer f) f,
+  ) {
+    final $$HabitLogsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.habitLogs,
+      getReferencedColumn: (t) => t.habitId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$HabitLogsTableFilterComposer(
+            $db: $db,
+            $table: $db.habitLogs,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$HabitsTableOrderingComposer extends Composer<_$AppDb, $HabitsTable> {
@@ -673,6 +1021,31 @@ class $$HabitsTableAnnotationComposer extends Composer<_$AppDb, $HabitsTable> {
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  Expression<T> habitLogsRefs<T extends Object>(
+    Expression<T> Function($$HabitLogsTableAnnotationComposer a) f,
+  ) {
+    final $$HabitLogsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.habitLogs,
+      getReferencedColumn: (t) => t.habitId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$HabitLogsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.habitLogs,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$HabitsTableTableManager
@@ -686,9 +1059,9 @@ class $$HabitsTableTableManager
           $$HabitsTableAnnotationComposer,
           $$HabitsTableCreateCompanionBuilder,
           $$HabitsTableUpdateCompanionBuilder,
-          (Habit, BaseReferences<_$AppDb, $HabitsTable, Habit>),
+          (Habit, $$HabitsTableReferences),
           Habit,
-          PrefetchHooks Function()
+          PrefetchHooks Function({bool habitLogsRefs})
         > {
   $$HabitsTableTableManager(_$AppDb db, $HabitsTable table)
     : super(
@@ -742,9 +1115,33 @@ class $$HabitsTableTableManager
                 createdAt: createdAt,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) =>
+                    (e.readTable(table), $$HabitsTableReferences(db, table, e)),
+              )
               .toList(),
-          prefetchHooksCallback: null,
+          prefetchHooksCallback: ({habitLogsRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [if (habitLogsRefs) db.habitLogs],
+              addJoins: null,
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (habitLogsRefs)
+                    await $_getPrefetchedData<Habit, $HabitsTable, HabitLog>(
+                      currentTable: table,
+                      referencedTable: $$HabitsTableReferences
+                          ._habitLogsRefsTable(db),
+                      managerFromTypedResult: (p0) =>
+                          $$HabitsTableReferences(db, table, p0).habitLogsRefs,
+                      referencedItemsForCurrentItem: (item, referencedItems) =>
+                          referencedItems.where((e) => e.habitId == item.id),
+                      typedResults: items,
+                    ),
+                ];
+              },
+            );
+          },
         ),
       );
 }
@@ -759,9 +1156,302 @@ typedef $$HabitsTableProcessedTableManager =
       $$HabitsTableAnnotationComposer,
       $$HabitsTableCreateCompanionBuilder,
       $$HabitsTableUpdateCompanionBuilder,
-      (Habit, BaseReferences<_$AppDb, $HabitsTable, Habit>),
+      (Habit, $$HabitsTableReferences),
       Habit,
-      PrefetchHooks Function()
+      PrefetchHooks Function({bool habitLogsRefs})
+    >;
+typedef $$HabitLogsTableCreateCompanionBuilder =
+    HabitLogsCompanion Function({
+      Value<int> id,
+      required int habitId,
+      required String date,
+      required String status,
+    });
+typedef $$HabitLogsTableUpdateCompanionBuilder =
+    HabitLogsCompanion Function({
+      Value<int> id,
+      Value<int> habitId,
+      Value<String> date,
+      Value<String> status,
+    });
+
+final class $$HabitLogsTableReferences
+    extends BaseReferences<_$AppDb, $HabitLogsTable, HabitLog> {
+  $$HabitLogsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $HabitsTable _habitIdTable(_$AppDb db) => db.habits.createAlias(
+    $_aliasNameGenerator(db.habitLogs.habitId, db.habits.id),
+  );
+
+  $$HabitsTableProcessedTableManager get habitId {
+    final $_column = $_itemColumn<int>('habit_id')!;
+
+    final manager = $$HabitsTableTableManager(
+      $_db,
+      $_db.habits,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_habitIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$HabitLogsTableFilterComposer
+    extends Composer<_$AppDb, $HabitLogsTable> {
+  $$HabitLogsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get date => $composableBuilder(
+    column: $table.date,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$HabitsTableFilterComposer get habitId {
+    final $$HabitsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.habitId,
+      referencedTable: $db.habits,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$HabitsTableFilterComposer(
+            $db: $db,
+            $table: $db.habits,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$HabitLogsTableOrderingComposer
+    extends Composer<_$AppDb, $HabitLogsTable> {
+  $$HabitLogsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get date => $composableBuilder(
+    column: $table.date,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$HabitsTableOrderingComposer get habitId {
+    final $$HabitsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.habitId,
+      referencedTable: $db.habits,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$HabitsTableOrderingComposer(
+            $db: $db,
+            $table: $db.habits,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$HabitLogsTableAnnotationComposer
+    extends Composer<_$AppDb, $HabitLogsTable> {
+  $$HabitLogsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get date =>
+      $composableBuilder(column: $table.date, builder: (column) => column);
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  $$HabitsTableAnnotationComposer get habitId {
+    final $$HabitsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.habitId,
+      referencedTable: $db.habits,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$HabitsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.habits,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$HabitLogsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDb,
+          $HabitLogsTable,
+          HabitLog,
+          $$HabitLogsTableFilterComposer,
+          $$HabitLogsTableOrderingComposer,
+          $$HabitLogsTableAnnotationComposer,
+          $$HabitLogsTableCreateCompanionBuilder,
+          $$HabitLogsTableUpdateCompanionBuilder,
+          (HabitLog, $$HabitLogsTableReferences),
+          HabitLog,
+          PrefetchHooks Function({bool habitId})
+        > {
+  $$HabitLogsTableTableManager(_$AppDb db, $HabitLogsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$HabitLogsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$HabitLogsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$HabitLogsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> habitId = const Value.absent(),
+                Value<String> date = const Value.absent(),
+                Value<String> status = const Value.absent(),
+              }) => HabitLogsCompanion(
+                id: id,
+                habitId: habitId,
+                date: date,
+                status: status,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int habitId,
+                required String date,
+                required String status,
+              }) => HabitLogsCompanion.insert(
+                id: id,
+                habitId: habitId,
+                date: date,
+                status: status,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$HabitLogsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({habitId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (habitId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.habitId,
+                                referencedTable: $$HabitLogsTableReferences
+                                    ._habitIdTable(db),
+                                referencedColumn: $$HabitLogsTableReferences
+                                    ._habitIdTable(db)
+                                    .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$HabitLogsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDb,
+      $HabitLogsTable,
+      HabitLog,
+      $$HabitLogsTableFilterComposer,
+      $$HabitLogsTableOrderingComposer,
+      $$HabitLogsTableAnnotationComposer,
+      $$HabitLogsTableCreateCompanionBuilder,
+      $$HabitLogsTableUpdateCompanionBuilder,
+      (HabitLog, $$HabitLogsTableReferences),
+      HabitLog,
+      PrefetchHooks Function({bool habitId})
     >;
 
 class $AppDbManager {
@@ -769,4 +1459,6 @@ class $AppDbManager {
   $AppDbManager(this._db);
   $$HabitsTableTableManager get habits =>
       $$HabitsTableTableManager(_db, _db.habits);
+  $$HabitLogsTableTableManager get habitLogs =>
+      $$HabitLogsTableTableManager(_db, _db.habitLogs);
 }

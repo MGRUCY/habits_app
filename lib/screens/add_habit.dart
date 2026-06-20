@@ -1,9 +1,9 @@
 import 'package:drift/drift.dart' as drift;
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:habits_app/db/db.dart';
-import 'package:habits_app/provider/db_provider.dart';
-import 'package:habits_app/provider/habits_provider.dart';
-import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:habits_app/settings/habit_colors.dart';
+import 'package:habits_app/provider/habits/habits_provider.dart';
 import 'package:toggle_switch/toggle_switch.dart';
 import 'package:day_picker/day_picker.dart';
 import 'package:count_stepper/count_stepper.dart';
@@ -36,64 +36,15 @@ class _AddHabitState extends ConsumerState<AddHabit> {
     DayInWeek("Sun", dayKey: "7"),
   ];
 
-  final listColors = [
-    Container(
-      width: 24,
-      height: 24,
-      decoration: const BoxDecoration(
-        color: Color(0xffee82ee),
-        shape: BoxShape.circle,
-      ),
-    ),
-    Container(
-      width: 24,
-      height: 24,
-      decoration: const BoxDecoration(
-        color: Colors.purpleAccent,
-        shape: BoxShape.circle,
-      ),
-    ),
-    Container(
-      width: 24,
-      height: 24,
-      decoration: const BoxDecoration(
-        color: Colors.blue,
-        shape: BoxShape.circle,
-      ),
-    ),
-    Container(
-      width: 24,
-      height: 24,
-      decoration: const BoxDecoration(
-        color: Colors.cyan,
-        shape: BoxShape.circle,
-      ),
-    ),
-    Container(
-      width: 24,
-      height: 24,
-      decoration: const BoxDecoration(
-        color: Colors.yellow,
-        shape: BoxShape.circle,
-      ),
-    ),
-    Container(
-      width: 24,
-      height: 24,
-      decoration: const BoxDecoration(
-        color: Colors.green,
-        shape: BoxShape.circle,
-      ),
-    ),
-    Container(
-      width: 24,
-      height: 24,
-      decoration: const BoxDecoration(
-        color: Colors.red,
-        shape: BoxShape.circle,
-      ),
-    ),
-  ];
+  final listColors = habitColors
+      .map(
+        (color) => Container(
+          width: 24,
+          height: 24,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
+      )
+      .toList();
 
   @override
   Widget build(BuildContext context) {
@@ -108,16 +59,28 @@ class _AddHabitState extends ConsumerState<AddHabit> {
           IconButton(
             iconSize: 34,
             onPressed: () async {
+              if (nameController.text.trim().isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text("Please enter a habit name")),
+                );
+                return;
+              }
+
               final habitsCompanion = HabitsCompanion(
-                name: drift.Value(nameController.text),
-                note: drift.Value(noteController.text),
+                name: drift.Value(nameController.text.trim()),
+                note: drift.Value(noteController.text.trim()),
                 timesFlag: drift.Value(timesFlag),
                 timesPerWeekInt: drift.Value(stepperController.currentValue),
-                daysList: drift.Value(daysCont), //use typeconverter
+                daysList: drift.Value(daysCont),
                 colorInt: drift.Value(colorCont),
                 createdAt: drift.Value(DateTime.now()),
               );
-              habit.addHabit(habitsCompanion);
+
+              await habit.addHabit(habitsCompanion);
+
+              if (context.mounted) {
+                Navigator.pop(context);
+              }
             },
             icon: Icon(Icons.add),
           ),

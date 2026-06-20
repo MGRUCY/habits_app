@@ -25,3 +25,15 @@ class Habits extends Table {
   IntColumn get colorInt => integer()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 }
+
+class HabitLogs extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get habitId => integer().references(Habits, #id)();
+  TextColumn get date => text()();
+  TextColumn get status => text()();
+
+  @override
+  List<Set<Column>> get uniqueKeys => [
+    {habitId, date},
+  ];
+}

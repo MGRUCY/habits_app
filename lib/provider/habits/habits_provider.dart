@@ -1,6 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:habits_app/db/db.dart';
-import 'package:habits_app/provider/db_provider.dart';
+import 'package:habits_app/provider/db/db_provider.dart';
 
 part 'habits_provider.g.dart';
 
@@ -20,10 +20,4 @@ class Habits extends _$Habits {
     await future;
   }
 
-  // Future<void> deleteHabit(int id) async {
-  //   final db = ref.read(appDbProvider);
-  //   await (db.delete(db.habits)..where((h) => h.id.equals(id))).go();
-  //   ref.invalidateSelf();
-  //   await future;
-  // }
 }

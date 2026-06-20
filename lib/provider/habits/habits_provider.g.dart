@@ -33,7 +33,7 @@ final class HabitsProvider
   Habits create() => Habits();
 }
 
-String _$habitsHash() => r'24ed3000927368261c0a008d3ca7fd92b9a70a61';
+String _$habitsHash() => r'7ef1154c9c342ea63d0608bf2bc2ebf8619ea7ae';
 
 abstract class _$Habits extends $AsyncNotifier<List<Map<String, dynamic>>> {
   FutureOr<List<Map<String, dynamic>>> build();
