@@ -53,14 +53,12 @@ class HabitLogs extends _$HabitLogs {
 
   int calculateStreak(List<Map<String, dynamic>> logs) {
     final byDate = {for (final log in logs) log['date'] as String: log};
-
     int streak = 0;
     bool checkingToday = true;
 
     for (int i = 0; i < 30; i++) {
       final day = DateTime.now().subtract(Duration(days: i));
-      final key =
-          "${day.year}-${day.month.toString().padLeft(2, '0')}-${day.day.toString().padLeft(2, '0')}";
+      final key = "${day.year}-${day.month.toString().padLeft(2, '0')}-${day.day.toString().padLeft(2, '0')}";
       final log = byDate[key];
 
       if (log == null) {

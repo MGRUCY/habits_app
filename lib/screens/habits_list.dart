@@ -1,14 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:habits_app/screens/habit_details_screen.dart';
 import 'package:habits_app/settings/habit_colors.dart';
 import 'package:habits_app/provider/habits/habits_provider.dart';
 import 'package:habits_app/provider/logs/habits_logs_provider.dart';
 import 'package:habits_app/screens/add_habit.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-String _todayString() {
-  final now = DateTime.now();
-  return "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
-}
+import 'package:habits_app/settings/today_string.dart';
 
 class HabitsList extends ConsumerWidget {
   const HabitsList({super.key});
@@ -16,7 +13,7 @@ class HabitsList extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final habitsAsync = ref.watch(habitsProvider);
-    
+
     return Scaffold(
       floatingActionButton: TextButton(
         onPressed: () {
@@ -34,6 +31,7 @@ class HabitsList extends ConsumerWidget {
       ),
       appBar: AppBar(title: Text("Habits")),
       body: SingleChildScrollView(
+        physics: BouncingScrollPhysics(),
         child: Column(
           children: [
             Rythm(),
@@ -58,7 +56,6 @@ class HabitsList extends ConsumerWidget {
   }
 }
 
-
 class Rythm extends ConsumerStatefulWidget {
   const Rythm({super.key});
 
@@ -82,6 +79,7 @@ class _RythmState extends ConsumerState<Rythm> {
       child: Column(
         children: [
           Row(
+            crossAxisAlignment: .start,
             children: [
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -90,7 +88,7 @@ class _RythmState extends ConsumerState<Rythm> {
                   Text("LAST 30 DAYS", style: TextStyle(fontSize: 8)),
                 ],
               ),
-              Spacer(),
+              // Spacer(),
             ],
           ),
           SizedBox(height: 18),
@@ -123,7 +121,9 @@ class _HabitDotsRow extends ConsumerWidget {
 
     List<String?> statuses = logsAsync.maybeWhen(
       data: (logs) {
-        return ref.read(habitLogsProvider(habitId).notifier).last30DaysStatus(logs);
+        return ref
+            .read(habitLogsProvider(habitId).notifier)
+            .last30DaysStatus(logs);
       },
       orElse: () => List.filled(30, null),
     );
@@ -167,20 +167,26 @@ class _CustomHabitTileState extends ConsumerState<CustomHabitTile> {
     Color color = habitColors[widget.habit['colorInt'] as int];
     int habitId = widget.habit['id'] as int;
     final logsAsync = ref.watch(habitLogsProvider(habitId));
-    String today = _todayString();
-
+    String today = todayString();
     bool isLoading = logsAsync.isLoading;
 
     int streak = logsAsync.maybeWhen(
       data: (logs) {
-        return ref.read(habitLogsProvider(habitId).notifier).calculateStreak(logs);
+        return ref
+            .read(habitLogsProvider(habitId).notifier)
+            .calculateStreak(logs);
       },
       orElse: () => 0,
     );
-
+    String stringStreak = streak.toString();
+    if (streak != 0) {
+      stringStreak = "$streak 🔥";
+    }
     String? todayStatus = logsAsync.maybeWhen(
       data: (logs) {
-        return ref.read(habitLogsProvider(habitId).notifier).statusForDate(logs, today);
+        return ref
+            .read(habitLogsProvider(habitId).notifier)
+            .statusForDate(logs, today);
       },
       orElse: () => null,
     );
@@ -189,88 +195,107 @@ class _CustomHabitTileState extends ConsumerState<CustomHabitTile> {
     if (todayStatus == 'done') {
       isDoneToday = true;
     }
+    bool graceDay = false;
 
-    return Container(
-      margin: EdgeInsets.all(10),
-      padding: EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: color.withAlpha(40),
-        borderRadius: BorderRadius.circular(30),
-        border: Border.all(color: color.withAlpha(140), width: 0.7),
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              InkWell(
-                onTap: () {
-                  if (isLoading) return;
-                  final notifier = ref.read(habitLogsProvider(habitId).notifier);
-                  if (isDoneToday) {
-                    notifier.unmark(today);
-                  } else {
-                    notifier.markDone(today);
-                  }
-                },
-                child: Container(
-                  width: 36,
-                  height: 36,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: isDoneToday ? color : Colors.transparent,
-                    border: Border.all(color: color, width: 2),
-                  ),
-                  child: Icon(
-                    Icons.check,
-                    color: isDoneToday ? Colors.white : color.withAlpha(0),
-                    size: 20,
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: ((context) => (HabitDetailsScreen(widget.habit, streak))),
+          ),
+        );
+      },
+      child: Container(
+        margin: EdgeInsets.all(10),
+        padding: EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: color.withAlpha(40),
+          borderRadius: BorderRadius.circular(30),
+          border: Border.all(color: color.withAlpha(140), width: 0.7),
+        ),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                InkWell(
+                  borderRadius: BorderRadius.circular(50),
+                  onTap: () {
+                    if (isLoading) return;
+                    final notifier = ref.read(
+                      habitLogsProvider(habitId).notifier,
+                    );
+                    if (isDoneToday) {
+                      notifier.unmark(today);
+                    } else if (todayStatus == 'grace') {
+                      todayStatus == 'grace'
+                          ? graceDay = true
+                          : graceDay = false;
+                    } else {
+                      notifier.markDone(today);
+                    }
+                  },
+                  child: Container(
+                    width: 36,
+                    height: 36,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: isDoneToday ? color : Colors.transparent,
+                      border: Border.all(color: color, width: 2),
+                    ),
+                    child: Icon(
+                      Icons.check,
+                      color: isDoneToday ? Colors.white : color.withAlpha(0),
+                      size: 20,
+                    ),
                   ),
                 ),
-              ),
-              SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  widget.habit['name'] ?? '',
+                SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    widget.habit['name'] ?? '',
+                    style: TextStyle(
+                      color: color,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                Spacer(),
+                Text(
+                  stringStreak,
                   style: TextStyle(
-                    color: color,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
+                    color: color.withAlpha(190),
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
                   ),
-                  overflow: TextOverflow.ellipsis,
                 ),
-              ),
-              Spacer(),
-              Text(
-                "🔥 $streak",
-                style: TextStyle(
-                  color: color.withAlpha(190),
-                  fontWeight: FontWeight.w600,
-                  fontSize: 13,
+              ],
+            ),
+            SizedBox(height: 18),
+            Row(
+              children: [
+                Text(
+                  "_________/\\____", //edit
+                  style: TextStyle(color: color, fontSize: 12),
                 ),
-              ),
-            ],
-          ),
-          SizedBox(height: 18),
-          Row(
-            children: [
-              Text(
-                "_________/\\____",
-                style: TextStyle(color: color, fontSize: 12),
-              ),
-              Spacer(),
-              _buildDayLabels(color),
-            ],
-          ),
-        ],
+                Spacer(),
+                _buildDayLabels(color),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildDayLabels(Color color) {
     List<String> labels = ["M", "T", "W", "T", "F", "S", "S"];
-    bool timesFlag = widget.habit['timesFlag'] as bool? ?? false;
-    List<String> daysList = (widget.habit['daysList'] as List?)?.cast<String>() ?? [];
+    bool timesFlag = widget.habit['timesFlag'];
+    List<String> daysList =
+        (widget.habit['daysList'] as List?)?.cast<String>() ?? [];
 
     return Row(
       children: [
@@ -280,11 +305,15 @@ class _CustomHabitTileState extends ConsumerState<CustomHabitTile> {
             child: Text(
               labels[i],
               style: TextStyle(
-                color: timesFlag || daysList.contains((i + 1).toString()) ? color : color.withAlpha(60),
-                fontWeight: timesFlag || daysList.contains((i + 1).toString()) ? FontWeight.bold : FontWeight.normal,
+                color: timesFlag || daysList.contains((i + 1).toString())
+                    ? color
+                    : color.withAlpha(60),
+                fontWeight: timesFlag || daysList.contains((i + 1).toString())
+                    ? FontWeight.bold
+                    : FontWeight.normal,
               ),
             ),
-          )
+          ),
       ],
     );
   }
