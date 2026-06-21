@@ -11,13 +11,17 @@ class HabitLogs extends _$HabitLogs {
   @override
   Future<List<Map<String, dynamic>>> build(int habitId) async {
     final db = ref.watch(appDbProvider);
-    final rows = await (db.select(db.habitLogs)..where((log) => log.habitId.equals(habitId))).get();
+    final rows = await (db.select(
+      db.habitLogs,
+    )..where((log) => log.habitId.equals(habitId))).get();
     return rows.map((row) => row.toJson()).toList();
   }
 
   Future<void> markDone(String date) async {
     final db = ref.read(appDbProvider);
-    await db.into(db.habitLogs).insert(
+    await db
+        .into(db.habitLogs)
+        .insert(
           HabitLogsCompanion(
             habitId: drift.Value(habitId),
             date: drift.Value(date),
@@ -58,7 +62,8 @@ class HabitLogs extends _$HabitLogs {
 
     for (int i = 0; i < 30; i++) {
       final day = DateTime.now().subtract(Duration(days: i));
-      final key = "${day.year}-${day.month.toString().padLeft(2, '0')}-${day.day.toString().padLeft(2, '0')}";
+      final key =
+          "${day.year}-${day.month.toString().padLeft(2, '0')}-${day.day.toString().padLeft(2, '0')}";
       final log = byDate[key];
 
       if (log == null) {
@@ -103,5 +108,10 @@ class HabitLogs extends _$HabitLogs {
     }
 
     return result;
+  }
+  
+  Future deleteLogs(int id) async {
+    final db = ref.read(appDbProvider);
+    await (db.delete(db.habitLogs)..where((l) => l.habitId.equals((id)))).go();
   }
 }

@@ -8,14 +8,16 @@ import 'package:toggle_switch/toggle_switch.dart';
 import 'package:day_picker/day_picker.dart';
 import 'package:count_stepper/count_stepper.dart';
 
-class AddHabit extends ConsumerStatefulWidget {
-  const AddHabit({super.key});
+class AddEditHabit extends ConsumerStatefulWidget {
+  const AddEditHabit(this.editHabit, {super.key});
+
+  final Map<String, dynamic>? editHabit;
 
   @override
-  ConsumerState<AddHabit> createState() => _AddHabitState();
+  ConsumerState<AddEditHabit> createState() => _AddEditHabitState();
 }
 
-class _AddHabitState extends ConsumerState<AddHabit> {
+class _AddEditHabitState extends ConsumerState<AddEditHabit> {
   TextEditingController nameController = TextEditingController();
   TextEditingController noteController = TextEditingController();
   StepperController stepperController = StepperController();
@@ -46,14 +48,46 @@ class _AddHabitState extends ConsumerState<AddHabit> {
       )
       .toList();
 
+  edit() {
+    if (widget.editHabit != null) {
+      nameController.text = widget.editHabit!["name"];
+      noteController.text = widget.editHabit!["note"];
+      timesFlag = widget.editHabit!["timesFlag"];
+      stepperController.currentValue = widget.editHabit!["timesPerWeekInt"];
+      daysCont = widget.editHabit!["daysList"]
+          .toString()
+          .replaceAll("]", "")
+          .replaceAll("[", "")
+          .split(',');
+      colorCont = widget.editHabit!["colorInt"];
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    edit();
+    debugPrint("editHabit it is: ${widget.editHabit.toString()}");
+    if (widget.editHabit != null) {
+      nameController.text = widget.editHabit!["name"];
+      noteController.text = widget.editHabit!["note"];
+      timesFlag = widget.editHabit!["timesFlag"];
+      stepperController.currentValue = widget.editHabit!["timesPerWeekInt"];
+      daysCont = widget.editHabit!["daysList"]
+          .toString()
+          .replaceAll("]", "")
+          .replaceAll("[", "")
+          .split(',');
+      colorCont = widget.editHabit!["colorInt"];
+    }
+
     final habit = ref.watch(habitsProvider.notifier);
 
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
-        title: Text("New Habit"),
+        title: (widget.editHabit == null)
+            ? Text("New Habit")
+            : Text("Edit Habit"),
         actions: [
           //submit
           IconButton(

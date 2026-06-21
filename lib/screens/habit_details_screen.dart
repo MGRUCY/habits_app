@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:habits_app/provider/habits/habits_provider.dart';
+import 'package:habits_app/screens/add_habit.dart';
+import 'package:habits_app/screens/habits_list.dart';
 import 'package:habits_app/settings/habit_colors.dart';
 import 'package:habits_app/settings/today_string.dart';
 import 'package:intl/intl.dart';
@@ -48,6 +51,10 @@ class HabitDetailsScreen extends ConsumerWidget {
       int.parse(habit['createdAt'].toString()),
     );
     String date = DateFormat.yMEd().format(dateTime);
+
+    final habitProv = ref.watch(habitsProvider.notifier);
+    final habitLogsProv = ref.watch((habitLogsProvider(habit["id"])).notifier);
+
     return Scaffold(
       appBar: AppBar(
         title: Column(
@@ -63,13 +70,30 @@ class HabitDetailsScreen extends ConsumerWidget {
         actions: [
           IconButton(
             onPressed: () {
-              // Navigator.push(
-              //   context,
-              //   MaterialPageRoute(builder: ((context) => (AddHabit()))),
-              // );
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: ((context) => (AddEditHabit(habit))),
+                ), //edit
+              );
             },
             icon: Icon(
               Icons.edit_note_rounded,
+              size: 35,
+              color: color.withAlpha(180),
+            ),
+          ),
+          IconButton(
+            onPressed: () async {
+              await habitProv.deleteHabit(habit["id"]);
+              await habitLogsProv.deleteLogs(habit["id"]);
+              Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) {
+                return HabitsList();
+              },));
+              Navigator.of(context).pop();
+            },
+            icon: Icon(
+              Icons.disabled_by_default_rounded,
               size: 35,
               color: color.withAlpha(180),
             ),
@@ -133,86 +157,114 @@ class HabitDetailsScreen extends ConsumerWidget {
             ],
           ),
           SizedBox(height: 30),
-          TextButton(
-            onPressed: () {
-              bool isDoneToday = false;
-              String nonNullStatus = statuses.last ?? "";
-              if (nonNullStatus.contains('done') ||
-                  nonNullStatus.contains('grace')) {
-                isDoneToday = true;
-              }
 
-              int habitId = habit['id'] as int;
-              String today = todayString();
-              final notifier = ref.read(habitLogsProvider(habitId).notifier);
-              if (isDoneToday) {
-                notifier.unmark(today);
-              } else {
-                notifier.markGrace(today);
-              }
-            },
-            style: ButtonStyle(
-              backgroundColor: WidgetStateProperty.resolveWith((states) {
-                return color.withAlpha(80);
-              }),
-            ),
-            child: Text("grace", style: TextStyle(color: Colors.white)),
-          ),
-          Expanded(
-            child: GridView.builder(
-              padding: const EdgeInsets.all(8),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 10,
-              ),
-              itemCount: 30,
-              itemBuilder: (context, index) {
-                final status = statuses[index];
-                final int daysAgo = 29 - index;
-                final DateTime dateForSquare = DateTime.now().subtract(
-                  Duration(days: daysAgo),
-                );
-                final String dayString = dateForSquare.day.toString();
+          SizedBox(
+            height: 120,
+            child: Expanded(
+              child: GridView.builder(
+                padding: const EdgeInsets.all(8),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 10,
+                ),
+                itemCount: 30,
+                itemBuilder: (context, index) {
+                  final status = statuses[index];
+                  final int daysAgo = 29 - index;
+                  final DateTime dateForSquare = DateTime.now().subtract(
+                    Duration(days: daysAgo),
+                  );
+                  final String dayString = dateForSquare.day.toString();
 
-                Color fillColor;
-                Color borderColor;
-                Color textColor;
+                  Color fillColor;
+                  Color borderColor;
+                  Color textColor;
 
-                if (status == 'done') {
-                  fillColor = color;
-                  borderColor = color;
-                  textColor = Colors.white;
-                } else if (status == 'grace') {
-                  fillColor = color.withAlpha(100);
-                  borderColor = color.withAlpha(100);
-                  textColor = Colors.white;
-                } else {
-                  fillColor = Colors.grey.withAlpha(40);
-                  borderColor = Colors.grey.withAlpha(120);
-                  textColor = const Color.fromARGB(137, 255, 255, 255);
-                }
+                  if (status == 'done') {
+                    fillColor = color;
+                    borderColor = color;
+                    textColor = Colors.white;
+                  } else if (status == 'grace') {
+                    fillColor = color.withAlpha(100);
+                    borderColor = color.withAlpha(100);
+                    textColor = Colors.white;
+                  } else {
+                    fillColor = Colors.grey.withAlpha(40);
+                    borderColor = Colors.grey.withAlpha(120);
+                    textColor = const Color.fromARGB(137, 255, 255, 255);
+                  }
 
-                return Container(
-                  margin: const EdgeInsets.all(2),
-                  decoration: BoxDecoration(
-                    color: fillColor,
-                    borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: borderColor, width: 0.7),
-                  ),
-                  child: Center(
-                    child: Text(
-                      dayString,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: textColor,
-                        fontWeight: status == 'done'
-                            ? FontWeight.bold
-                            : FontWeight.normal,
+                  return Container(
+                    margin: const EdgeInsets.all(2),
+                    decoration: BoxDecoration(
+                      color: fillColor,
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: borderColor, width: 0.7),
+                    ),
+                    child: Center(
+                      child: Text(
+                        dayString,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: textColor,
+                          fontWeight: status == 'done'
+                              ? FontWeight.bold
+                              : FontWeight.normal,
+                        ),
                       ),
                     ),
-                  ),
-                );
-              },
+                  );
+                },
+              ),
             ),
+          ),
+          SizedBox(height: 30),
+
+          Row(
+            mainAxisAlignment: .center,
+            children: [
+              TextButton(
+                onPressed: () {},
+                style: TextButton.styleFrom(
+                  padding: EdgeInsets.symmetric(horizontal: 50),
+                  backgroundColor: color.withAlpha(80),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadiusGeometry.circular(50),
+                  ),
+                ),
+                child: Text("Notes", style: TextStyle(color: Colors.white)),
+              ),
+
+              SizedBox(width: 10),
+              TextButton(
+                onPressed: () {
+                  bool isDoneToday = false;
+                  String nonNullStatus = statuses.last ?? "";
+                  if (nonNullStatus.contains('done') ||
+                      nonNullStatus.contains('grace')) {
+                    isDoneToday = true;
+                  }
+
+                  int habitId = habit['id'] as int;
+                  String today = todayString();
+                  final notifier = ref.read(
+                    habitLogsProvider(habitId).notifier,
+                  );
+                  if (isDoneToday) {
+                    notifier.unmark(today);
+                  } else {
+                    notifier.markGrace(today);
+                  }
+                },
+                style: TextButton.styleFrom(
+                  padding: EdgeInsets.symmetric(horizontal: 50),
+                  backgroundColor: color.withAlpha(80),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadiusGeometry.circular(50),
+                  ),
+                ),
+                child: Text("Grace", style: TextStyle(color: Colors.white)),
+              ),
+            ],
           ),
         ],
       ),

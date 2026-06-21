@@ -20,4 +20,10 @@ class Habits extends _$Habits {
     await future;
   }
 
+  Future<void> deleteHabit(int id) async {
+    final db = ref.read(appDbProvider);
+    await (db.delete(db.habits)..where((h) => h.id.equals(id))).go();
+    ref.invalidateSelf();
+    await future;
+  }
 }

@@ -19,7 +19,9 @@ class HabitsList extends ConsumerWidget {
         onPressed: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: ((context) => (AddHabit()))),
+            MaterialPageRoute(
+              builder: ((context) => (AddEditHabit(null))),
+            ), //add
           );
         },
         style: ButtonStyle(
@@ -49,6 +51,7 @@ class HabitsList extends ConsumerWidget {
               ),
               error: (err, stack) => Text("Error loading habits: $err"),
             ),
+            SizedBox(height: 70),
           ],
         ),
       ),
@@ -127,6 +130,23 @@ class _HabitDotsRow extends ConsumerWidget {
       },
       orElse: () => List.filled(30, null),
     );
+
+    List newList = statuses.reversed
+        .toList()
+        .getRange(0, 7)
+        .toList()
+        .reversed
+        .toList();
+    print("newList: $newList");
+
+    List lineSpikes = newList.map((e) {
+      if (e == "done") {
+        return 1;
+      } else {
+        return 0;
+      }
+    }).toList();
+    print("lineSpikes: $lineSpikes");
 
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 4),
