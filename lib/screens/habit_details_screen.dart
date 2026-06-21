@@ -62,7 +62,12 @@ class HabitDetailsScreen extends ConsumerWidget {
         ),
         actions: [
           IconButton(
-            onPressed: () {},
+            onPressed: () {
+              // Navigator.push(
+              //   context,
+              //   MaterialPageRoute(builder: ((context) => (AddHabit()))),
+              // );
+            },
             icon: Icon(
               Icons.edit_note_rounded,
               size: 35,
@@ -155,30 +160,56 @@ class HabitDetailsScreen extends ConsumerWidget {
           ),
           Expanded(
             child: GridView.builder(
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              padding: const EdgeInsets.all(8),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 10,
               ),
-              //fix
+              itemCount: 30,
               itemBuilder: (context, index) {
-                final status = statuses[index+1];
+                final status = statuses[index];
+                final int daysAgo = 29 - index;
+                final DateTime dateForSquare = DateTime.now().subtract(
+                  Duration(days: daysAgo),
+                );
+                final String dayString = dateForSquare.day.toString();
+
+                Color fillColor;
+                Color borderColor;
+                Color textColor;
+
+                if (status == 'done') {
+                  fillColor = color;
+                  borderColor = color;
+                  textColor = Colors.white;
+                } else if (status == 'grace') {
+                  fillColor = color.withAlpha(100);
+                  borderColor = color.withAlpha(100);
+                  textColor = Colors.white;
+                } else {
+                  fillColor = Colors.grey.withAlpha(40);
+                  borderColor = Colors.grey.withAlpha(120);
+                  textColor = const Color.fromARGB(137, 255, 255, 255);
+                }
+
                 return Container(
-                  padding: EdgeInsets.all(2),
+                  margin: const EdgeInsets.all(2),
                   decoration: BoxDecoration(
-                    color: color.withAlpha(40),
-                    borderRadius: BorderRadius.circular(30),
-                    border: Border.all(
-                      color: (status != null)
-                          ? color.withAlpha(140)
-                          : Colors.grey.withAlpha(120),
-                      width: 0.2,
+                    color: fillColor,
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: borderColor, width: 0.7),
+                  ),
+                  child: Center(
+                    child: Text(
+                      dayString,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: textColor,
+                        fontWeight: status == 'done'
+                            ? FontWeight.bold
+                            : FontWeight.normal,
+                      ),
                     ),
                   ),
-                  height: 5,
-                  width: 5,
-                  child: //Text((status != null) ?
-                  Text(
-                    index.toString(),
-                  ), //,style: TextStyle(color: color.withAlpha(120)),
                 );
               },
             ),
