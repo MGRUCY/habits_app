@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart' as drift;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:habits_app/db/db.dart';
 import 'package:habits_app/settings/habit_colors.dart';
 import 'package:habits_app/provider/habits/habits_provider.dart';
@@ -39,8 +40,12 @@ class _AddEditHabitState extends ConsumerState<AddEditHabit> {
   @override
   void initState() {
     super.initState();
-    nameController = TextEditingController(text: widget.editHabit?["name"] ?? "");
-    noteController = TextEditingController(text: widget.editHabit?["note"] ?? "");
+    nameController = TextEditingController(
+      text: widget.editHabit?["name"] ?? "",
+    );
+    noteController = TextEditingController(
+      text: widget.editHabit?["note"] ?? "",
+    );
     stepperController = StepperController();
     stepperController.currentValue = widget.editHabit?["timesPerWeekInt"] ?? 7;
 
@@ -53,7 +58,13 @@ class _AddEditHabitState extends ConsumerState<AddEditHabit> {
       if (rawDays is List) {
         daysCont = rawDays.cast<String>();
       } else {
-        daysCont = rawDays.toString().replaceAll("]", "").replaceAll("[", "").split(',').map((e) => e.trim()).toList();
+        daysCont = rawDays
+            .toString()
+            .replaceAll("]", "")
+            .replaceAll("[", "")
+            .split(',')
+            .map((e) => e.trim())
+            .toList();
       }
     }
   }
@@ -66,27 +77,43 @@ class _AddEditHabitState extends ConsumerState<AddEditHabit> {
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
-        title: Text(widget.editHabit == null ? "New Habit" : "Edit Habit"),
+        title: Text(
+          widget.editHabit == null ? "New Habit" : "Edit Habit",
+          style: GoogleFonts.patrickHand(),
+        ),
         actions: [
           IconButton(
             iconSize: 34,
             onPressed: () async {
               if (nameController.text.trim().isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Please enter a name")));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      "Please enter a habit name",
+                      style: GoogleFonts.patrickHand(),
+                    ),
+                  ),
+                );
                 return;
               }
 
               final habitsCompanion = HabitsCompanion(
-                id: widget.editHabit != null ? drift.Value(widget.editHabit!['id']) : const drift.Value.absent(),
+                id: widget.editHabit != null
+                    ? drift.Value(widget.editHabit!['id'])
+                    : const drift.Value.absent(),
                 name: drift.Value(nameController.text.trim()),
                 note: drift.Value(noteController.text.trim()),
                 timesFlag: drift.Value(timesFlag),
                 timesPerWeekInt: drift.Value(stepperController.currentValue),
                 daysList: drift.Value(daysCont),
                 colorInt: drift.Value(colorCont),
-                createdAt: drift.Value(widget.editHabit != null
-                    ? DateTime.fromMillisecondsSinceEpoch(int.parse(widget.editHabit!['createdAt'].toString()))
-                    : DateTime.now()),
+                createdAt: drift.Value(
+                  widget.editHabit != null
+                      ? DateTime.fromMillisecondsSinceEpoch(
+                          int.parse(widget.editHabit!['createdAt'].toString()),
+                        )
+                      : DateTime.now(),
+                ),
               );
 
               if (widget.editHabit == null) {
@@ -94,10 +121,14 @@ class _AddEditHabitState extends ConsumerState<AddEditHabit> {
               } else {
                 await habit.updateHabit(habitsCompanion);
               }
-
+              if (widget.editHabit != null) {
+                if (context.mounted) Navigator.pop(context);
+              }
               if (context.mounted) Navigator.pop(context);
             },
-            icon: Icon(widget.editHabit == null ? Icons.add : Icons.done_all_rounded),
+            icon: Icon(
+              widget.editHabit == null ? Icons.add : Icons.done_all_rounded,
+            ),
           ),
           SizedBox(width: 8),
         ],
@@ -111,9 +142,11 @@ class _AddEditHabitState extends ConsumerState<AddEditHabit> {
               child: TextField(
                 controller: nameController,
                 decoration: InputDecoration(
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   hintText: "Title",
-                  hintStyle: TextStyle(color: Colors.grey),
+                  hintStyle: GoogleFonts.patrickHand(color: Colors.grey),
                 ),
               ),
             ),
@@ -122,20 +155,26 @@ class _AddEditHabitState extends ConsumerState<AddEditHabit> {
               child: TextField(
                 controller: noteController,
                 decoration: InputDecoration(
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   hintText: "Note",
-                  hintStyle: TextStyle(color: Colors.grey),
+                  hintStyle: GoogleFonts.patrickHand(color: Colors.grey),
                 ),
               ),
             ),
             SizedBox(height: 14),
-            Text("schedule", style: TextStyle(color: Colors.grey)),
+            Text(
+              "schedule",
+              style: GoogleFonts.patrickHand(color: Colors.grey),
+            ),
             SizedBox(height: 10),
             ToggleSwitch(
               minWidth: 200,
               cornerRadius: 20.0,
               activeFgColor: Colors.white,
-              inactiveBgColor: theme.colorScheme.surfaceContainerHighest.withAlpha(100),
+              inactiveBgColor: theme.colorScheme.surfaceContainerHighest
+                  .withAlpha(100),
               inactiveFgColor: Colors.white,
               activeBgColor: [theme.colorScheme.primary],
               initialLabelIndex: initialLabelIndex,
@@ -153,7 +192,10 @@ class _AddEditHabitState extends ConsumerState<AddEditHabit> {
                 ? Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text("How many times per week?"),
+                      Text(
+                        "How many times per week?",
+                        style: GoogleFonts.patrickHand(),
+                      ),
                       SizedBox(width: 20),
                       CountStepper(
                         iconColor: Colors.white,
@@ -170,11 +212,14 @@ class _AddEditHabitState extends ConsumerState<AddEditHabit> {
                     border: true,
                     padding: 1,
                     width: MediaQuery.of(context).size.width / 1.1,
-                    boxDecoration: BoxDecoration(color: Colors.transparent, borderRadius: BorderRadius.circular(30.0)),
+                    boxDecoration: BoxDecoration(
+                      color: Colors.transparent,
+                      borderRadius: BorderRadius.circular(30.0),
+                    ),
                     onSelect: (values) => daysCont = values,
                   ),
             SizedBox(height: 20),
-            Text("color", style: TextStyle(color: Colors.grey)),
+            Text("color", style: GoogleFonts.patrickHand(color: Colors.grey)),
             SizedBox(height: 12),
             Wrap(
               spacing: 15,
@@ -185,9 +230,18 @@ class _AddEditHabitState extends ConsumerState<AddEditHabit> {
                   onTap: () => setState(() => colorCont = index),
                   child: Container(
                     decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(color: colorCont == index ? Colors.white : Colors.transparent, width: 2)),
-                    child: CircleAvatar(backgroundColor: habitColors[index], radius: 15),
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: colorCont == index
+                            ? Colors.white
+                            : Colors.transparent,
+                        width: 2,
+                      ),
+                    ),
+                    child: CircleAvatar(
+                      backgroundColor: habitColors[index],
+                      radius: 15,
+                    ),
                   ),
                 );
               }),

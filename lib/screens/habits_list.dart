@@ -1,6 +1,7 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:habits_app/provider/habits/habits_provider.dart';
 import 'package:habits_app/provider/logs/habits_logs_provider.dart';
 import 'package:habits_app/screens/add_edit_habit.dart';
@@ -31,7 +32,7 @@ class HabitsList extends ConsumerWidget {
         ),
         child: Text("+ NEW HABIT"),
       ),
-      appBar: AppBar(title: Text("Habits")),
+      appBar: AppBar(title: Text("Habits", style: GoogleFonts.patrickHand())),
       body: SingleChildScrollView(
         physics: BouncingScrollPhysics(),
         child: Column(
@@ -123,7 +124,7 @@ class _RythmState extends ConsumerState<Rythm> {
                     children: [
                       Text(
                         "Your Rhythm",
-                        style: TextStyle(
+                        style: GoogleFonts.patrickHand(
                           fontWeight: FontWeight.bold,
                           fontSize: 18,
                         ),
@@ -131,7 +132,7 @@ class _RythmState extends ConsumerState<Rythm> {
                       SizedBox(width: 10),
                       Text(
                         globalStreak > 0 ? "$globalStreak 🔥" : "0",
-                        style: TextStyle(
+                        style: GoogleFonts.patrickHand(
                           color: theme.colorScheme.primary,
                           fontWeight: FontWeight.w900,
                           fontSize: 18,
@@ -141,7 +142,7 @@ class _RythmState extends ConsumerState<Rythm> {
                   ),
                   Text(
                     "To Be Consistent!",
-                    style: TextStyle(fontSize: 8, color: Colors.grey),
+                    style: GoogleFonts.patrickHand(fontSize: 8, color: Colors.grey),
                   ),
                 ],
               ),
@@ -300,7 +301,7 @@ class _CustomHabitTileState extends ConsumerState<CustomHabitTile> {
                 Expanded(
                   child: Text(
                     widget.habit['name'] ?? '',
-                    style: TextStyle(
+                    style: GoogleFonts.patrickHand(
                       color: color,
                       fontWeight: FontWeight.bold,
                       fontSize: 18,
@@ -327,7 +328,8 @@ class _CustomHabitTileState extends ConsumerState<CustomHabitTile> {
                   width: 70,
                   height: 30,
                   child: LineChart(
-                    LineChartData(
+                    LineChartData(lineTouchData: LineTouchData(enabled: false),
+                      
                       gridData: FlGridData(show: false),
                       titlesData: FlTitlesData(show: false),
                       borderData: FlBorderData(show: false),
@@ -371,7 +373,7 @@ class _CustomHabitTileState extends ConsumerState<CustomHabitTile> {
             padding: EdgeInsets.symmetric(horizontal: 2),
             child: Text(
               labels[i],
-              style: TextStyle(
+              style: GoogleFonts.patrickHand(
                 color: timesFlag || daysList.contains((i + 1).toString())
                     ? color
                     : color.withAlpha(60),

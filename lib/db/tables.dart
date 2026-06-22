@@ -37,3 +37,10 @@ class HabitLogs extends Table {
     {habitId, date},
   ];
 }
+
+class Notes extends Table {
+  TextColumn get noteMsg => text()();
+  IntColumn get habitId => integer().references(Habits, #id)();
+  DateTimeColumn get dateAndTimeNoted =>
+      dateTime().withDefault(currentDateAndTime)();
+}

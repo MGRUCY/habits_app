@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'habits_logs_provider.dart';
+part of 'notes_provider.dart';
 
 // **************************************************************************
 // RiverpodGenerator
@@ -9,39 +9,39 @@ part of 'habits_logs_provider.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 
-@ProviderFor(HabitLogs)
-const habitLogsProvider = HabitLogsFamily._();
+@ProviderFor(NotesP)
+const notesPProvider = NotesPFamily._();
 
-final class HabitLogsProvider
-    extends $AsyncNotifierProvider<HabitLogs, List<Map<String, dynamic>>> {
-  const HabitLogsProvider._({
-    required HabitLogsFamily super.from,
+final class NotesPProvider
+    extends $AsyncNotifierProvider<NotesP, List<Map<String, dynamic>>> {
+  const NotesPProvider._({
+    required NotesPFamily super.from,
     required int super.argument,
   }) : super(
          retry: null,
-         name: r'habitLogsProvider',
+         name: r'notesPProvider',
          isAutoDispose: true,
          dependencies: null,
          $allTransitiveDependencies: null,
        );
 
   @override
-  String debugGetCreateSourceHash() => _$habitLogsHash();
+  String debugGetCreateSourceHash() => _$notesPHash();
 
   @override
   String toString() {
-    return r'habitLogsProvider'
+    return r'notesPProvider'
         ''
         '($argument)';
   }
 
   @$internal
   @override
-  HabitLogs create() => HabitLogs();
+  NotesP create() => NotesP();
 
   @override
   bool operator ==(Object other) {
-    return other is HabitLogsProvider && other.argument == argument;
+    return other is NotesPProvider && other.argument == argument;
   }
 
   @override
@@ -50,34 +50,34 @@ final class HabitLogsProvider
   }
 }
 
-String _$habitLogsHash() => r'5791f795214b4e2a87e9a8664be8056240d22966';
+String _$notesPHash() => r'a6e16d6faa27ddd3f0978cec7aeda537af025338';
 
-final class HabitLogsFamily extends $Family
+final class NotesPFamily extends $Family
     with
         $ClassFamilyOverride<
-          HabitLogs,
+          NotesP,
           AsyncValue<List<Map<String, dynamic>>>,
           List<Map<String, dynamic>>,
           FutureOr<List<Map<String, dynamic>>>,
           int
         > {
-  const HabitLogsFamily._()
+  const NotesPFamily._()
     : super(
         retry: null,
-        name: r'habitLogsProvider',
+        name: r'notesPProvider',
         dependencies: null,
         $allTransitiveDependencies: null,
         isAutoDispose: true,
       );
 
-  HabitLogsProvider call(int habitId) =>
-      HabitLogsProvider._(argument: habitId, from: this);
+  NotesPProvider call(int habitId) =>
+      NotesPProvider._(argument: habitId, from: this);
 
   @override
-  String toString() => r'habitLogsProvider';
+  String toString() => r'notesPProvider';
 }
 
-abstract class _$HabitLogs extends $AsyncNotifier<List<Map<String, dynamic>>> {
+abstract class _$NotesP extends $AsyncNotifier<List<Map<String, dynamic>>> {
   late final _$args = ref.$arg as int;
   int get habitId => _$args;
 

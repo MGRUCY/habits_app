@@ -17,7 +17,7 @@ LazyDatabase _openConnection() {
   });
 }
 
-@DriftDatabase(tables: [Habits, HabitLogs])
+@DriftDatabase(tables: [Habits, HabitLogs, Notes])
 class AppDb extends _$AppDb {
   static AppDb? _instance;
   factory AppDb() {
@@ -26,5 +26,17 @@ class AppDb extends _$AppDb {
   AppDb.internal() : super(_openConnection());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+    onCreate: (m) async {
+      await m.createAll();
+    },
+    onUpgrade: (m, from, to) async{
+      if (from == 1) {
+        await m.createTable(notes);
+      }
+    },
+  );
 }

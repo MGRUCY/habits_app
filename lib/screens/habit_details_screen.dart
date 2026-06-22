@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:habits_app/provider/habits/habits_provider.dart';
 import 'package:habits_app/screens/add_edit_habit.dart';
 import 'package:habits_app/screens/habits_list.dart';
+import 'package:habits_app/screens/notes_screen.dart';
 import 'package:habits_app/settings/habit_colors.dart';
 import 'package:habits_app/settings/today_string.dart';
 import 'package:intl/intl.dart';
@@ -65,10 +67,16 @@ class HabitDetailsScreen extends ConsumerWidget {
         title: Column(
           crossAxisAlignment: .start,
           children: [
-            Text(habit['name'], style: TextStyle(color: color, fontSize: 24)),
+            Text(
+              habit['name'],
+              style: GoogleFonts.patrickHand(color: color, fontSize: 24),
+            ),
             Text(
               "since $date - $period",
-              style: TextStyle(color: Colors.grey.withAlpha(150), fontSize: 12),
+              style: GoogleFonts.patrickHand(
+                color: Colors.grey.withAlpha(150),
+                fontSize: 12,
+              ),
             ),
           ],
         ),
@@ -102,7 +110,7 @@ class HabitDetailsScreen extends ConsumerWidget {
               Navigator.of(context).pop();
             },
             icon: Icon(
-              Icons.disabled_by_default_rounded,
+              Icons.playlist_remove_outlined,
               size: 35,
               color: color.withAlpha(180),
             ),
@@ -127,7 +135,10 @@ class HabitDetailsScreen extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: .center,
                   mainAxisAlignment: .center,
-                  children: [Text(currentStreak.toString()), Text("Streak")],
+                  children: [
+                    Text(currentStreak.toString()),
+                    Text("Streak", style: GoogleFonts.patrickHand()),
+                  ],
                 ),
               ),
               Container(
@@ -144,7 +155,7 @@ class HabitDetailsScreen extends ConsumerWidget {
                   mainAxisAlignment: .center,
                   children: [
                     Text(count.toString()),
-                    Text("Days done", textAlign: .center),
+                    Text("Days done", style: GoogleFonts.patrickHand(), textAlign: .center),
                   ],
                 ),
               ),
@@ -160,7 +171,7 @@ class HabitDetailsScreen extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: .center,
                   mainAxisAlignment: .center,
-                  children: [Text(countG.toString()), Text("Days graced")],
+                  children: [Text(countG.toString()), Text("Days graced", style: GoogleFonts.patrickHand())],
                 ),
               ),
             ],
@@ -211,7 +222,7 @@ class HabitDetailsScreen extends ConsumerWidget {
                   child: Center(
                     child: Text(
                       dayString,
-                      style: TextStyle(
+                      style: GoogleFonts.patrickHand(
                         fontSize: 12,
                         color: textColor,
                         fontWeight: status == 'done'
@@ -230,7 +241,12 @@ class HabitDetailsScreen extends ConsumerWidget {
             mainAxisAlignment: .center,
             children: [
               TextButton(
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => NotesScreen(habit)),
+                  );
+                },
                 style: TextButton.styleFrom(
                   padding: EdgeInsets.symmetric(horizontal: 50),
                   backgroundColor: color.withAlpha(80),
@@ -238,7 +254,10 @@ class HabitDetailsScreen extends ConsumerWidget {
                     borderRadius: BorderRadiusGeometry.circular(50),
                   ),
                 ),
-                child: Text("Notes", style: TextStyle(color: Colors.white)),
+                child: Text(
+                  "Notes",
+                  style: GoogleFonts.patrickHand(color: Colors.white),
+                ),
               ),
 
               SizedBox(width: 10),
@@ -262,7 +281,10 @@ class HabitDetailsScreen extends ConsumerWidget {
                     borderRadius: BorderRadiusGeometry.circular(50),
                   ),
                 ),
-                child: Text("Grace", style: TextStyle(color: Colors.white)),
+                child: Text(
+                  "Grace",
+                  style: GoogleFonts.patrickHand(color: Colors.white),
+                ),
               ),
             ],
           ),
