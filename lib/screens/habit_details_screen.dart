@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:habits_app/provider/habits/habits_provider.dart';
-import 'package:habits_app/screens/add_habit.dart';
+import 'package:habits_app/screens/add_edit_habit.dart';
 import 'package:habits_app/screens/habits_list.dart';
 import 'package:habits_app/settings/habit_colors.dart';
 import 'package:habits_app/settings/today_string.dart';
@@ -17,6 +17,12 @@ class HabitDetailsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final logsAsync = ref.watch(habitLogsProvider(habit["id"]));
+    final currentStreak = logsAsync.maybeWhen(
+      data: (logs) => ref
+          .read(habitLogsProvider(habit["id"]).notifier)
+          .calculateStreak(logs),
+      orElse: () => streak,
+    );
     List<String?> statuses = logsAsync.maybeWhen(
       data: (logs) {
         return ref
@@ -26,7 +32,6 @@ class HabitDetailsScreen extends ConsumerWidget {
       orElse: () => List.filled(30, null),
     );
     int count = 0;
-
     statuses.nonNulls.map((status) {
       if (status == 'done') {
         count++;
@@ -38,10 +43,10 @@ class HabitDetailsScreen extends ConsumerWidget {
         countG++;
       }
     }).toString();
-    //times
+
     bool timesOrDays = habit['timesFlag'];
     String timesString = "${habit['timesPerWeekInt'].toString()} x / week";
-    //days
+
     List<String> daysList = (habit['daysList'] as List?)?.cast<String>() ?? [];
     int daysCout = daysList.length;
     String daysString = "$daysCout days / week";
@@ -74,7 +79,7 @@ class HabitDetailsScreen extends ConsumerWidget {
                 context,
                 MaterialPageRoute(
                   builder: ((context) => (AddEditHabit(habit))),
-                ), //edit
+                ),
               );
             },
             icon: Icon(
@@ -87,9 +92,13 @@ class HabitDetailsScreen extends ConsumerWidget {
             onPressed: () async {
               await habitProv.deleteHabit(habit["id"]);
               await habitLogsProv.deleteLogs(habit["id"]);
-              Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) {
-                return HabitsList();
-              },));
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(
+                  builder: (context) {
+                    return HabitsList();
+                  },
+                ),
+              );
               Navigator.of(context).pop();
             },
             icon: Icon(
@@ -118,7 +127,7 @@ class HabitDetailsScreen extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: .center,
                   mainAxisAlignment: .center,
-                  children: [Text(streak.toString()), Text("Streak")],
+                  children: [Text(currentStreak.toString()), Text("Streak")],
                 ),
               ),
               Container(
@@ -135,7 +144,7 @@ class HabitDetailsScreen extends ConsumerWidget {
                   mainAxisAlignment: .center,
                   children: [
                     Text(count.toString()),
-                    Text("day / \n 30 days", textAlign: .center),
+                    Text("Days done", textAlign: .center),
                   ],
                 ),
               ),
@@ -151,7 +160,7 @@ class HabitDetailsScreen extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: .center,
                   mainAxisAlignment: .center,
-                  children: [Text(countG.toString()), Text("Grace days")],
+                  children: [Text(countG.toString()), Text("Days graced")],
                 ),
               ),
             ],
@@ -160,61 +169,59 @@ class HabitDetailsScreen extends ConsumerWidget {
 
           SizedBox(
             height: 120,
-            child: Expanded(
-              child: GridView.builder(
-                padding: const EdgeInsets.all(8),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 10,
-                ),
-                itemCount: 30,
-                itemBuilder: (context, index) {
-                  final status = statuses[index];
-                  final int daysAgo = 29 - index;
-                  final DateTime dateForSquare = DateTime.now().subtract(
-                    Duration(days: daysAgo),
-                  );
-                  final String dayString = dateForSquare.day.toString();
+            child: GridView.builder(
+              padding: const EdgeInsets.all(8),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 10,
+              ),
+              itemCount: 30,
+              itemBuilder: (context, index) {
+                final status = statuses[index];
+                final int daysAgo = 29 - index;
+                final DateTime dateForSquare = DateTime.now().subtract(
+                  Duration(days: daysAgo),
+                );
+                final String dayString = dateForSquare.day.toString();
 
-                  Color fillColor;
-                  Color borderColor;
-                  Color textColor;
+                Color fillColor;
+                Color borderColor;
+                Color textColor;
 
-                  if (status == 'done') {
-                    fillColor = color;
-                    borderColor = color;
-                    textColor = Colors.white;
-                  } else if (status == 'grace') {
-                    fillColor = color.withAlpha(100);
-                    borderColor = color.withAlpha(100);
-                    textColor = Colors.white;
-                  } else {
-                    fillColor = Colors.grey.withAlpha(40);
-                    borderColor = Colors.grey.withAlpha(120);
-                    textColor = const Color.fromARGB(137, 255, 255, 255);
-                  }
+                if (status == 'done') {
+                  fillColor = color;
+                  borderColor = color;
+                  textColor = Colors.white;
+                } else if (status == 'grace') {
+                  fillColor = color.withAlpha(100);
+                  borderColor = color.withAlpha(100);
+                  textColor = Colors.white;
+                } else {
+                  fillColor = Colors.grey.withAlpha(40);
+                  borderColor = Colors.grey.withAlpha(120);
+                  textColor = const Color.fromARGB(137, 255, 255, 255);
+                }
 
-                  return Container(
-                    margin: const EdgeInsets.all(2),
-                    decoration: BoxDecoration(
-                      color: fillColor,
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(color: borderColor, width: 0.7),
-                    ),
-                    child: Center(
-                      child: Text(
-                        dayString,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: textColor,
-                          fontWeight: status == 'done'
-                              ? FontWeight.bold
-                              : FontWeight.normal,
-                        ),
+                return Container(
+                  margin: const EdgeInsets.all(2),
+                  decoration: BoxDecoration(
+                    color: fillColor,
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: borderColor, width: 0.7),
+                  ),
+                  child: Center(
+                    child: Text(
+                      dayString,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: textColor,
+                        fontWeight: status == 'done'
+                            ? FontWeight.bold
+                            : FontWeight.normal,
                       ),
                     ),
-                  );
-                },
-              ),
+                  ),
+                );
+              },
             ),
           ),
           SizedBox(height: 30),
@@ -237,19 +244,12 @@ class HabitDetailsScreen extends ConsumerWidget {
               SizedBox(width: 10),
               TextButton(
                 onPressed: () {
-                  bool isDoneToday = false;
-                  String nonNullStatus = statuses.last ?? "";
-                  if (nonNullStatus.contains('done') ||
-                      nonNullStatus.contains('grace')) {
-                    isDoneToday = true;
-                  }
-
                   int habitId = habit['id'] as int;
                   String today = todayString();
                   final notifier = ref.read(
                     habitLogsProvider(habitId).notifier,
                   );
-                  if (isDoneToday) {
+                  if (statuses.last == 'grace') {
                     notifier.unmark(today);
                   } else {
                     notifier.markGrace(today);

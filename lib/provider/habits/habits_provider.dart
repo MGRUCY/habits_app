@@ -20,6 +20,13 @@ class Habits extends _$Habits {
     await future;
   }
 
+  Future<void> updateHabit(HabitsCompanion entry) async {
+    final db = ref.read(appDbProvider);
+    await db.update(db.habits).replace(entry);
+    ref.invalidateSelf();
+    await future;
+  }
+
   Future<void> deleteHabit(int id) async {
     final db = ref.read(appDbProvider);
     await (db.delete(db.habits)..where((h) => h.id.equals(id))).go();

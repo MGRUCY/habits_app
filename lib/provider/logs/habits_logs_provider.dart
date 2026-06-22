@@ -29,7 +29,7 @@ class HabitLogs extends _$HabitLogs {
           ),
           onConflict: DoUpdate(
             (old) => HabitLogsCompanion.custom(status: const Constant('done')),
-            // target: [db.habitLogs.habitId, db.habitLogs.date],
+            target: [db.habitLogs.habitId, db.habitLogs.date],
           ),
         );
     ref.invalidateSelf();
@@ -48,7 +48,7 @@ class HabitLogs extends _$HabitLogs {
           ),
           onConflict: DoUpdate(
             (old) => HabitLogsCompanion.custom(status: const Constant('grace')),
-            // target: [db.habitLogs.habitId, db.habitLogs.date],
+            target: [db.habitLogs.habitId, db.habitLogs.date],
           ),
         );
     ref.invalidateSelf();

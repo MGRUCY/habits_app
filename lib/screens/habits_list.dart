@@ -1,10 +1,11 @@
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'package:habits_app/screens/habit_details_screen.dart';
-import 'package:habits_app/settings/habit_colors.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:habits_app/provider/habits/habits_provider.dart';
 import 'package:habits_app/provider/logs/habits_logs_provider.dart';
-import 'package:habits_app/screens/add_habit.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:habits_app/screens/add_edit_habit.dart';
+import 'package:habits_app/screens/habit_details_screen.dart';
+import 'package:habits_app/settings/habit_colors.dart';
 import 'package:habits_app/settings/today_string.dart';
 
 class HabitsList extends ConsumerWidget {
@@ -13,20 +14,19 @@ class HabitsList extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final habitsAsync = ref.watch(habitsProvider);
+    final theme = Theme.of(context);
 
     return Scaffold(
       floatingActionButton: TextButton(
         onPressed: () {
           Navigator.push(
             context,
-            MaterialPageRoute(
-              builder: ((context) => (AddEditHabit(null))),
-            ), //add
+            MaterialPageRoute(builder: ((context) => (AddEditHabit(null)))),
           );
         },
         style: ButtonStyle(
           backgroundColor: WidgetStateProperty.resolveWith((states) {
-            return Color.fromARGB(51, 96, 125, 139);
+            return theme.colorScheme.primaryContainer.withAlpha(50);
           }),
         ),
         child: Text("+ NEW HABIT"),
@@ -70,43 +70,92 @@ class _RythmState extends ConsumerState<Rythm> {
   @override
   Widget build(BuildContext context) {
     final habitsAsync = ref.watch(habitsProvider);
+    final theme = Theme.of(context);
 
     return Container(
       margin: EdgeInsets.all(10),
       padding: EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color.fromARGB(51, 96, 125, 139),
+        color: theme.colorScheme.primaryContainer.withAlpha(25),
         borderRadius: BorderRadius.circular(30),
-        border: Border.all(color: Color.fromARGB(89, 96, 125, 139), width: 0.7),
+        border: Border.all(
+          color: theme.colorScheme.primary.withAlpha(50),
+          width: 0.7,
+        ),
       ),
-      child: Column(
-        children: [
-          Row(
-            crossAxisAlignment: .start,
+      child: habitsAsync.when(
+        data: (habits) {
+          if (habits.isEmpty) return SizedBox(width: 1);
+
+          final allHabitStatuses = habits.map((habit) {
+            final logs = ref
+                .watch(habitLogsProvider(habit['id']))
+                .maybeWhen(
+                  data: (d) => d,
+                  orElse: () => <Map<String, dynamic>>[],
+                );
+            return ref
+                .read(habitLogsProvider(habit['id']).notifier)
+                .last30DaysStatus(logs);
+          }).toList();
+
+          int globalStreak = 0;
+          for (int i = 29; i >= 0; i--) {
+            bool allDoneThatDay = allHabitStatuses.every((statusList) {
+              final status = statusList[i];
+              return status == 'done' || status == 'grace';
+            });
+            if (allDoneThatDay) {
+              globalStreak++;
+            } else {
+              if (i == 29) continue;
+              break;
+            }
+          }
+
+          return Column(
             children: [
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text("Your Rhythm"),
-                  Text("LAST 30 DAYS", style: TextStyle(fontSize: 8)),
+                  Row(
+                    mainAxisAlignment: .spaceBetween,
+                    children: [
+                      Text(
+                        "Your Rhythm",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
+                      ),
+                      SizedBox(width: 10),
+                      Text(
+                        globalStreak > 0 ? "$globalStreak 🔥" : "0",
+                        style: TextStyle(
+                          color: theme.colorScheme.primary,
+                          fontWeight: FontWeight.w900,
+                          fontSize: 18,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Text(
+                    "To Be Consistent!",
+                    style: TextStyle(fontSize: 8, color: Colors.grey),
+                  ),
                 ],
               ),
-              // Spacer(),
+              SizedBox(height: 18),
+              Column(
+                children: habits
+                    .map((habit) => _HabitDotsRow(habit: habit))
+                    .toList(),
+              ),
             ],
-          ),
-          SizedBox(height: 18),
-          habitsAsync.when(
-            data: (habits) {
-              return Column(
-                children: habits.map((habit) {
-                  return _HabitDotsRow(habit: habit);
-                }).toList(),
-              );
-            },
-            loading: () => CircularProgressIndicator(),
-            error: (err, stack) => Text("Error: $err"),
-          ),
-        ],
+          );
+        },
+        loading: () => CircularProgressIndicator(),
+        error: (err, stack) => Text("Error: $err"),
       ),
     );
   }
@@ -118,57 +167,35 @@ class _HabitDotsRow extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    Color color = habitColors[habit['colorInt'] as int];
-    int habitId = habit['id'] as int;
-    final logsAsync = ref.watch(habitLogsProvider(habitId));
+    final color = habitColors[habit['colorInt'] as int];
+    final logsAsync = ref.watch(habitLogsProvider(habit['id']));
 
-    List<String?> statuses = logsAsync.maybeWhen(
+    return logsAsync.maybeWhen(
       data: (logs) {
-        return ref
-            .read(habitLogsProvider(habitId).notifier)
+        final statuses = ref
+            .read(habitLogsProvider(habit['id']).notifier)
             .last30DaysStatus(logs);
+        return Padding(
+          padding: EdgeInsets.symmetric(vertical: 3),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: statuses.map((status) {
+              Color dotColor = color.withAlpha(50);
+              if (status == 'done') dotColor = color;
+              if (status == 'grace') dotColor = color.withAlpha(110);
+              return Container(
+                width: 7,
+                height: 7,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: dotColor,
+                ),
+              );
+            }).toList(),
+          ),
+        );
       },
-      orElse: () => List.filled(30, null),
-    );
-
-    List newList = statuses.reversed
-        .toList()
-        .getRange(0, 7)
-        .toList()
-        .reversed
-        .toList();
-    print("newList: $newList");
-
-    List lineSpikes = newList.map((e) {
-      if (e == "done") {
-        return 1;
-      } else {
-        return 0;
-      }
-    }).toList();
-    print("lineSpikes: $lineSpikes");
-
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: statuses.map((status) {
-          Color dotColor;
-          if (status == 'done') {
-            dotColor = color;
-          } else if (status == 'grace') {
-            dotColor = color.withAlpha(110);
-          } else {
-            dotColor = color.withAlpha(30);
-          }
-
-          return Container(
-            width: 6,
-            height: 6,
-            decoration: BoxDecoration(shape: BoxShape.circle, color: dotColor),
-          );
-        }).toList(),
-      ),
+      orElse: () => SizedBox(),
     );
   }
 }
@@ -188,34 +215,29 @@ class _CustomHabitTileState extends ConsumerState<CustomHabitTile> {
     int habitId = widget.habit['id'] as int;
     final logsAsync = ref.watch(habitLogsProvider(habitId));
     String today = todayString();
-    bool isLoading = logsAsync.isLoading;
 
-    int streak = logsAsync.maybeWhen(
-      data: (logs) {
-        return ref
-            .read(habitLogsProvider(habitId).notifier)
-            .calculateStreak(logs);
-      },
-      orElse: () => 0,
-    );
-    String stringStreak = streak.toString();
-    if (streak != 0) {
-      stringStreak = "$streak 🔥";
-    }
-    String? todayStatus = logsAsync.maybeWhen(
-      data: (logs) {
-        return ref
-            .read(habitLogsProvider(habitId).notifier)
-            .statusForDate(logs, today);
-      },
+    final todayStatus = logsAsync.maybeWhen(
+      data: (logs) => ref
+          .read(habitLogsProvider(habitId).notifier)
+          .statusForDate(logs, today),
       orElse: () => null,
     );
 
-    bool isDoneToday = false;
-    if (todayStatus == 'done') {
-      isDoneToday = true;
-    }
-    bool graceDay = false;
+    int streak = logsAsync.maybeWhen(
+      data: (logs) =>
+          ref.read(habitLogsProvider(habitId).notifier).calculateStreak(logs),
+      orElse: () => 0,
+    );
+
+    final List<String?> last30 = logsAsync.maybeWhen(
+      data: (logs) =>
+          ref.read(habitLogsProvider(habitId).notifier).last30DaysStatus(logs),
+      orElse: () => List.filled(30, null),
+    );
+
+    final List<FlSpot> spots = last30.sublist(23).asMap().entries.map((e) {
+      return FlSpot(e.key.toDouble(), (e.value == 'done') ? 1.0 : 0.0);
+    }).toList();
 
     return GestureDetector(
       onTap: () {
@@ -241,18 +263,13 @@ class _CustomHabitTileState extends ConsumerState<CustomHabitTile> {
                 InkWell(
                   borderRadius: BorderRadius.circular(50),
                   onTap: () {
-                    if (isLoading) return;
                     final notifier = ref.read(
                       habitLogsProvider(habitId).notifier,
                     );
-                    if (isDoneToday) {
-                      notifier.unmark(today);
-                    } else if (todayStatus == 'grace') {
-                      todayStatus == 'grace'
-                          ? graceDay = true
-                          : graceDay = false;
-                    } else {
+                    if (todayStatus == null) {
                       notifier.markDone(today);
+                    } else {
+                      notifier.unmark(today);
                     }
                   },
                   child: Container(
@@ -261,12 +278,20 @@ class _CustomHabitTileState extends ConsumerState<CustomHabitTile> {
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: isDoneToday ? color : Colors.transparent,
+                      color: todayStatus == 'done'
+                          ? color
+                          : (todayStatus == 'grace'
+                                ? color.withAlpha(100)
+                                : Colors.transparent),
                       border: Border.all(color: color, width: 2),
                     ),
                     child: Icon(
-                      Icons.check,
-                      color: isDoneToday ? Colors.white : color.withAlpha(0),
+                      todayStatus == 'grace'
+                          ? Icons.auto_awesome_rounded
+                          : Icons.check,
+                      color: todayStatus != null
+                          ? Colors.white
+                          : Colors.transparent,
                       size: 20,
                     ),
                   ),
@@ -278,14 +303,15 @@ class _CustomHabitTileState extends ConsumerState<CustomHabitTile> {
                     style: TextStyle(
                       color: color,
                       fontWeight: FontWeight.bold,
-                      fontSize: 16,
+                      fontSize: 18,
                     ),
                     overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
                   ),
                 ),
-                Spacer(),
+                SizedBox(width: 30),
                 Text(
-                  stringStreak,
+                  streak > 0 ? "$streak 🔥" : streak.toString(),
                   style: TextStyle(
                     color: color.withAlpha(190),
                     fontWeight: FontWeight.w600,
@@ -297,9 +323,31 @@ class _CustomHabitTileState extends ConsumerState<CustomHabitTile> {
             SizedBox(height: 18),
             Row(
               children: [
-                Text(
-                  "_________/\\____", //edit
-                  style: TextStyle(color: color, fontSize: 12),
+                SizedBox(
+                  width: 70,
+                  height: 30,
+                  child: LineChart(
+                    LineChartData(
+                      gridData: FlGridData(show: false),
+                      titlesData: FlTitlesData(show: false),
+                      borderData: FlBorderData(show: false),
+                      minX: 0,
+                      maxX: 6,
+                      minY: 0,
+                      maxY: 1,
+                      lineBarsData: [
+                        LineChartBarData(
+                          spots: spots,
+                          isCurved: false,
+                          color: color,
+                          barWidth: 3,
+                          isStrokeCapRound: true,
+                          dotData: FlDotData(show: false),
+                          belowBarData: BarAreaData(show: false),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
                 Spacer(),
                 _buildDayLabels(color),
@@ -312,10 +360,9 @@ class _CustomHabitTileState extends ConsumerState<CustomHabitTile> {
   }
 
   Widget _buildDayLabels(Color color) {
-    List<String> labels = ["M", "T", "W", "T", "F", "S", "S"];
-    bool timesFlag = widget.habit['timesFlag'];
-    List<String> daysList =
-        (widget.habit['daysList'] as List?)?.cast<String>() ?? [];
+    List labels = ["M", "T", "W", "T", "F", "S", "S"];
+    bool timesFlag = widget.habit['timesFlag'] ?? false;
+    List daysList = (widget.habit['daysList'] as List?)?.cast() ?? [];
 
     return Row(
       children: [
